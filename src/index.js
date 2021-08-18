@@ -2,41 +2,52 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 
-class Square extends React.Component {
-  //Vamos armazenar o valor atual do Square em this.state e alterá-lo quando o Square for clicado.
-  constructor(props) {
-    super(props); //sempre chama o super ao definir o constructor de uma classe
-    this.state = {
-      value: null,
-    };
-  }
-
-  render() {
-    return (
-      <button 
-	  	className="square" 
-	  	onClick={() => this.setState({ value: 'X' })}/* apos atualizacao, o {this.state.value} sera X */>
-        {this.state.value}
-      </button>
-    );
-  }
+function Square(props) {
+  return (
+    <button className="square" onClick={props.onClick}>
+      {props.value}
+    </button>
+  );
 }
 
 class Board extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      squares: Array(9).fill(null), //Array(9).fill(null) retorna um array de 9 elementos, cada um com o valor null
+      xIsNext: true,
+    };
+  }
 
-	constructor(props) {
-		super(props);
-		this.state = {
-			squares: Array(9).fill(null) //Array(9).fill(null) retorna um array de 9 elementos, cada um com o valor null
-		};
-	}
+  handleClick(i) {
+    const squares = this.state.squares.slice(); //slice serve para criar uma copia do array de quadrados para o modificar ao inves de fazer alteracoes no array original
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? "X" : "O";
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    }); //agora o state é guardado no componente Board, ao inves de no Square
+  }
 
   renderSquare(i) {
-    return <Square value={i} />;
+    return (
+      <Square
+        value={this.state.squares[i]}
+        onClick={() => this.handleClick(i)}
+      />
+    );
   }
 
   render() {
-    const status = "Next player: X";
+    const winner = calculateWinner(this.state.squares);
+    let status;
+    if (winner) {
+      status = "Winner: " + winner;
+    } else {
+      status = "Next player: " + (this.state.xIsNext ? "X" : "O");
+    }
 
     return (
       <div>
@@ -75,6 +86,26 @@ class Game extends React.Component {
       </div>
     );
   }
+}
+
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
 }
 
 // ========================================
